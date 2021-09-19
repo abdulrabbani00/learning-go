@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"reflect"
@@ -335,6 +336,100 @@ func basic_next_fib(next int) int {
 	return some
 }
 
+func basic_pointer_zeroval(ival int) {
+	fmt.Println("Ival Initial: ", ival)
+	ival = 0
+	fmt.Println("Ival Zero Set from Function: ", ival)
+}
+
+func basic_pointer_zeroptr(iptr *int) {
+	fmt.Println("Ptr Initial Value: ", *iptr)
+	fmt.Println("Ptr Address: ", iptr)
+	*iptr = 0
+	fmt.Println("Ptr Post Value: ", *iptr)
+	fmt.Println("Ptr Address: ", &iptr)
+}
+
+type person struct {
+	name string
+	age  int
+}
+
+func new_person_ptr(person_name string) *person {
+
+	p := person{name: person_name}
+	p.age = 42
+	return &p
+}
+
+func new_person(person_name string) person {
+
+	p := person{name: person_name}
+	p.age = 42
+	return p
+}
+
+type geometry interface {
+	area() float64
+	perim() float64
+}
+
+type rect struct {
+	width, height float64
+}
+
+type circle struct {
+	radius float64
+}
+
+func (r *rect) area() float64 {
+	return r.width * r.height
+}
+
+func (r rect) perim() float64 {
+	return 2*r.width + 2*r.height
+}
+
+func (c circle) area() float64 {
+	return math.Pi * c.radius * c.radius
+}
+
+func (c circle) perim() float64 {
+	return math.Pi * 2 * c.radius
+}
+
+func measure(g geometry) {
+	fmt.Println("Shape: ", g)
+	fmt.Println("Area: ", g.area())
+	fmt.Println("Perim: ", g.perim())
+}
+
+func f_err_1(arg int) (int, error) {
+	if arg == 42 {
+		return -1, errors.New("Cant work with 42.")
+	}
+
+	return arg + 3, nil
+}
+
+type argError struct {
+	arg  int
+	prob string
+}
+
+func (e argError) Error() string {
+	return fmt.Sprintf("%d - %s", e.arg, e.prob)
+}
+
+func f_err_2(arg int) (int, error) {
+
+	if arg == 42 {
+		return -1, argError{arg, "cant work with 42"}
+	}
+
+	return arg + 3, nil
+}
+
 func main() {
 	// basic_values()
 	//basic_variables()
@@ -403,4 +498,115 @@ func main() {
 
 	//}
 	//fmt.Println(fib(7))
+
+	////////////////////////////////
+	///// Pointers
+	////////////////////////////////
+	// ptr_val := 1
+	// fmt.Println("Initial ptr_val: ", ptr_val)
+	// basic_pointer_zeroval(ptr_val)
+	// fmt.Println("Post zeroval ptr_val: ", ptr_val) // The function changes the value within its scope, not the variable within the arg
+
+	// fmt.Println("Initial ptr_val: ", ptr_val)
+	// fmt.Println("Initial Address: ", &ptr_val)
+	// basic_pointer_zeroptr(&ptr_val)
+	// fmt.Println("Post ptr_val: ", ptr_val)
+
+	////////////////////////////////
+	//// Struct
+	////////////////////////////////
+
+	// first_person := person{name: "Leslie Scott", age: 30}
+	// fmt.Println("First Person: ", first_person)
+	// fmt.Println("First Person name: ", first_person.name)
+
+	// second_person := person{name: "Carla Benz"}
+	// fmt.Println("First Person: ", second_person)
+	// fmt.Println("First Person name: ", second_person.age)
+
+	// third_person := person{"Abdul Rabbani", 23}
+	// fmt.Println("Third Person: ", third_person)
+
+	// fourth_person := &person{"Mark Reppert", 31}
+	// fmt.Println("Fourth Person: ", fourth_person)
+	// fmt.Println("Fourth Person's Age: ", fourth_person.age)
+
+	// third_person.age = 42
+	// fourth_person.age = 42
+	// // Interesting how you can change the age through the pointer in the same way that you can through a direct reference...
+	// fmt.Println("Change Third Person's age to 42 plz: ", third_person.age)
+	// fmt.Println("Change Fourth Person's age to 42 plz: ", fourth_person.age)
+
+	// temp_person := person{"Gerina Xhiherri", 23}
+	// fmt.Println("New Person: ", new_person)
+
+	// fifth_person := &temp_person
+	// fmt.Println("Fifth Person: ", fifth_person)
+	// fmt.Println("Fifth Person: ", fifth_person.age)
+	// fifth_person.age = 42
+	// fmt.Println("Change Fifth Person's age to 42 plz: ", fifth_person.age)
+
+	// sixth_person := new_person("Tommy Parker")
+	// fmt.Println("Sixth Person: ", sixth_person)
+
+	// seventh_person := new_person_ptr("Trevor Brabrant")
+	// fmt.Println("Seventh Person: ", seventh_person)
+
+	////////////////////////////////
+	////// methods
+	////////////////////////////////
+	/*
+		Go automatically handles conversion between values and pointers for method calls.
+		You may want to use a pointer receiver type to avoid copying on method calls or to allow the method to mutate the receiving struct.
+	*/
+
+	// shape_1 := rect{width: 10, height: 10}
+	// fmt.Println("shape_1: ", shape_1)
+
+	// fmt.Println("shape_1 area: ", shape_1.area())
+	// fmt.Println("shape_1 perim: ", shape_1.perim())
+
+	// shape_1_ptr := &shape_1
+	// fmt.Println("shape_1_ptr: ", shape_1_ptr)
+	// fmt.Println("shape_1_ptr area: ", shape_1_ptr.area())
+	// fmt.Println("shape_1_ptr perim: ", shape_1_ptr.perim())
+
+	////////////////////////////////
+	///// Interface
+	////////////////////////////////
+
+	// circ := circle{radius: 5}
+	// measure(circ)
+
+	// rectangle := rect{width: 10, height: 10}
+	// measure(&rectangle)
+	// measure(rectangle) Wont work cause one of rectangle's methods requires a pointer input
+	// You can pass a pointer when a function is expecting a value, but not a value when a func expects a pointer
+
+	////////////////////////////////
+	/// Errors
+	////////////////////////////////
+
+	for _, i := range []int{7, 42} {
+		if r, e := f_err_1(i); e != nil {
+			fmt.Println("f_err_1 failed: ", e)
+		} else {
+			fmt.Println("f_err_1 succeded: ", r)
+		}
+	}
+
+	for _, i := range []int{7, 42} {
+		if r, e := f_err_2(i); e != nil {
+			fmt.Println("f_err_2 failed: ", e)
+		} else {
+			fmt.Println("f_err_2 succeded: ", r)
+		}
+	}
+
+	_, e := f_err_2(42)
+	if ae, ok := e.(argError); ok {
+		fmt.Println(ae.arg)
+		fmt.Println(ae.prob)
+	}
+
 }
